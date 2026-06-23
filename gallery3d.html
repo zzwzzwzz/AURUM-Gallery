@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Immersive Gallery (beta) — AURUM</title>
+<meta name="description" content="Walk through AURUM in 3D — a scroll-driven tour of the collection. An experimental enhancement; the full accessible gallery lives in the 2D pages.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* gallery3d is full-viewport; the canvas is fixed and we drive the camera
+     from wheel / touch / keyboard instead of native page scroll, so clicks
+     reach the canvas cleanly. */
+  html,body{height:100%; overflow:hidden;}
+  #scene{position:fixed; inset:0; z-index:0; display:block;}
+
+  /* persistent slim top bar — business funnel always one tap away (UX seat) */
+  .bar3d{position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center; justify-content:space-between;
+         height:60px; padding:0 clamp(16px,4vw,40px); background:linear-gradient(180deg,rgba(11,11,12,.85),transparent);
+         pointer-events:none;}
+  .bar3d a, .bar3d button{pointer-events:auto;}
+  .bar3d .brand{font-family:var(--serif); font-weight:600; font-size:22px; letter-spacing:.28em; padding-left:.28em; color:var(--text); text-decoration:none;}
+  .bar3d .brand::before{content:"—"; color:var(--gold); margin-right:.5em; letter-spacing:0;}
+  .bar3d nav{display:flex; align-items:center; gap:clamp(10px,2vw,22px);}
+  .bar3d nav a{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); text-decoration:none;}
+  .bar3d nav a:hover{color:var(--text);}
+  .bar3d nav a.exit{color:var(--gold); border:1px solid var(--hair); padding:7px 13px; border-radius:3px;}
+
+  /* style toggle (Dark / White cube) — the "show me both" control */
+  .toggle3d{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:10; display:flex; gap:0;
+            border:1px solid var(--hair); border-radius:4px; overflow:hidden; background:rgba(11,11,12,.6); backdrop-filter:blur(6px);}
+  .toggle3d button{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+                   background:transparent; border:none; padding:10px 18px; cursor:pointer;}
+  .toggle3d button[aria-pressed="true"]{background:var(--gold-bright); color:#0B0B0C;}
+
+  /* onboarding hint */
+  .hint3d{position:fixed; bottom:74px; left:50%; transform:translateX(-50%); z-index:10; text-align:center;
+          font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-soft);
+          transition:opacity .6s; pointer-events:none;}
+  .hint3d .arrow{display:block; margin:8px auto 0; width:1px; height:22px; background:linear-gradient(var(--gold-soft),transparent); animation:nudge 1.6s ease-in-out infinite;}
+  @keyframes nudge{0%,100%{opacity:.3; transform:translateY(0);}50%{opacity:1; transform:translateY(6px);}}
+
+  /* progress rail */
+  .prog3d{position:fixed; top:0; left:0; height:2px; width:0%; background:var(--gold); z-index:11; transition:width .15s;}
+
+  /* wall-label panel (click a painting) */
+  .label3d{position:fixed; right:clamp(16px,4vw,40px); bottom:clamp(80px,12vh,120px); z-index:12; max-width:340px;
+           background:rgba(18,17,19,.94); border:1px solid var(--hair); border-radius:6px; padding:22px 24px;
+           transform:translateY(16px); opacity:0; pointer-events:none; transition:opacity .3s, transform .3s;}
+  .label3d.show{opacity:1; transform:translateY(0); pointer-events:auto;}
+  .label3d .mono{display:block; margin-bottom:10px;}
+  .label3d h2{font-family:var(--serif); font-weight:600; font-size:26px; line-height:1.1;}
+  .label3d .meta{font-family:var(--mono); font-size:12px; letter-spacing:.05em; color:var(--gold-soft); margin-top:10px; line-height:1.6;}
+  .label3d .close{position:absolute; top:12px; right:14px; background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1;}
+
+  /* loading screen */
+  .load3d{position:fixed; inset:0; z-index:30; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg); transition:opacity .6s;}
+  .load3d.gone{opacity:0; pointer-events:none;}
+  .load3d .mark{font-family:var(--serif); font-weight:600; font-size:34px; letter-spacing:.3em; padding-left:.3em; margin-bottom:24px;}
+  .load3d .mark::before{content:"—"; color:var(--gold); margin-right:.5em; letter-spacing:0;}
+  .load3d .track{width:220px; height:2px; background:var(--hair-faint);}
+  .load3d .fill{height:100%; width:0%; background:var(--gold); transition:width .3s;}
+  .load3d .pct{font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--muted); margin-top:14px;}
+
+  /* fallback (no WebGL / reduced motion choice) */
+  .fallback3d{position:fixed; inset:0; z-index:40; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:var(--bg); padding:var(--pad);}
+  .fallback3d.show{display:flex;}
+  .fallback3d h1{font-family:var(--serif); font-weight:500; font-size:clamp(34px,6vw,64px); line-height:1; margin-bottom:18px;}
+  .fallback3d p{color:var(--muted); max-width:42ch; margin-bottom:28px;}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="prog3d" id="prog"></div>
+
+<header class="bar3d">
+  <a href="index.html" class="brand" aria-label="AURUM home">AURUM</a>
+  <nav aria-label="Gallery">
+    <a href="visit.html">Visit</a>
+    <a href="membership.html">Membership</a>
+    <a href="exhibitions.html" title="The full, accessible 2D gallery">Accessible gallery</a>
+    <a href="index.html" class="exit">Exit ✕</a>
+  </nav>
+</header>
+
+<div class="hint3d" id="hint">Scroll to walk through<span class="arrow"></span></div>
+
+<div class="toggle3d" role="group" aria-label="Room style">
+  <button id="style-dark" aria-pressed="true">Dark room</button>
+  <button id="style-white" aria-pressed="false">White cube</button>
+</div>
+
+<aside class="label3d" id="label" aria-live="polite">
+  <button class="close" id="label-close" aria-label="Close label">✕</button>
+  <span class="mono" id="label-kicker">Now viewing</span>
+  <h2 id="label-title"></h2>
+  <div class="meta" id="label-meta"></div>
+</aside>
+
+<div class="load3d" id="loader">
+  <div class="mark">AURUM</div>
+  <div class="track"><div class="fill" id="load-fill"></div></div>
+  <div class="pct" id="load-pct">Preparing the room… 0%</div>
+</div>
+
+<div class="fallback3d" id="fallback">
+  <h1>The 2D gallery <em style="font-style:italic;color:var(--gold)">awaits.</em></h1>
+  <p>This immersive tour needs WebGL and motion. You'll find the full collection — every work, every label — in the standard gallery.</p>
+  <a href="exhibitions.html" class="btn">Enter the gallery</a>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* =========================================================================
+   AURUM — Immersive Gallery (beta)
+   Technique: SCROLL-ON-RAILS. The camera glides forward along a fixed path
+   down a corridor of paintings. Wheel / touch / arrow keys drive a single
+   "progress" value (0..1); the camera position is interpolated from it.
+   Paintings are the existing Met CC0 images mapped onto flat planes.
+   ========================================================================= */
+
+const canvas = document.getElementById('scene');
+
+/* ---- artworks: the same public-domain Met images used across the 2D site ---- */
+const PAINTINGS = [
+  { side:'L', z: 14, url:'https://images.metmuseum.org/CRDImages/ep/web-large/DP-42549-001.jpg', title:'Wheat Field with Cypresses', artist:'Vincent van Gogh', year:'1889 · Oil on canvas' },
+  { side:'R', z: 10, url:'https://images.metmuseum.org/CRDImages/as/web-large/DP141042.jpg',     title:'The Great Wave off Kanagawa', artist:'Katsushika Hokusai', year:'c.1831 · Woodblock' },
+  { side:'L', z:  4, url:'https://images.metmuseum.org/CRDImages/ep/web-large/DT47.jpg',         title:'Still Life with Apples', artist:'Paul Cézanne', year:'c.1890 · Oil on canvas' },
+  { side:'R', z:  0, url:'https://images.metmuseum.org/CRDImages/ep/web-large/DP-25465-001.jpg', title:'The Monet Family in Their Garden', artist:'Édouard Manet', year:'1874 · Oil on canvas' },
+  { side:'L', z: -6, url:'https://images.metmuseum.org/CRDImages/ep/web-large/DT1396.jpg',       title:"L'Arlésienne: Madame Ginoux", artist:'Vincent van Gogh', year:'1888 · Oil on canvas' },
+  { side:'R', z:-10, url:'https://images.metmuseum.org/CRDImages/ep/web-large/DP231550.jpg',     title:'The Card Players', artist:'Paul Cézanne', year:'1890 · Oil on canvas' },
+  { side:'L', z:-16, url:'https://images.metmuseum.org/CRDImages/ep/web-large/DP145912.jpg',     title:'Portrait of a Man', artist:'Rembrandt van Rijn', year:'c.1660 · Oil on canvas' },
+  { side:'R', z:-20, url:'https://images.metmuseum.org/CRDImages/as/web-large/DP-13180-023.jpg', title:'Six Jewel Rivers', artist:'Utagawa Hiroshige', year:'1857 · Woodblock' },
+];
+
+/* ---- two room palettes (the "show me both" toggle) ---- */
+const THEMES = {
+  dark:  { bg:0x0B0B0C, wall:0x18171a, floor:0x101012, ceil:0x0d0d0f, hemi:0.45, amb:0.5, spot:0xffe6b0, spotI:2.6 },
+  white: { bg:0xeae7e0, wall:0xf2efe9, floor:0xddd9d1, ceil:0xf6f4ef, hemi:1.15, amb:1.1, spot:0xffffff, spotI:1.1 },
+};
+let theme = 'dark';
+
+/* ---- guard: no WebGL → show the accessible fallback and stop ---- */
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+} catch (e) {
+  document.getElementById('fallback').classList.add('show');
+  document.getElementById('loader').classList.add('gone');
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // protect retina phones
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(THEMES[theme].bg);
+scene.fog = new THREE.Fog(THEMES[theme].bg, 14, 40);
+
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 120);
+camera.position.set(0, 1.6, 18);
+
+/* ---- lights (kept reference so the toggle can recolour them) ---- */
+const hemi = new THREE.HemisphereLight(0xffffff, 0x222222, THEMES[theme].hemi);
+scene.add(hemi);
+const amb = new THREE.AmbientLight(0xffffff, THEMES[theme].amb);
+scene.add(amb);
+const spots = [];
+
+/* ---- room: a hand-built box corridor (no Blender, no GLTF) ---- */
+const W = 8, H = 4.2, LEN = 50;
+const wallMat  = new THREE.MeshStandardMaterial({ color:THEMES[theme].wall,  roughness:0.95, metalness:0 });
+const floorMat = new THREE.MeshStandardMaterial({ color:THEMES[theme].floor, roughness:0.6,  metalness:0.1 });
+const ceilMat  = new THREE.MeshStandardMaterial({ color:THEMES[theme].ceil,  roughness:1,    metalness:0 });
+const frameMat = new THREE.MeshStandardMaterial({ color:0x000000, roughness:0.8 });
+
+function plane(w, h, mat){ return new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); }
+
+const floor = plane(W, LEN, floorMat); floor.rotation.x = -Math.PI/2; floor.position.y = 0; scene.add(floor);
+const ceil  = plane(W, LEN, ceilMat);  ceil.rotation.x =  Math.PI/2; ceil.position.y = H; scene.add(ceil);
+const wallL = plane(LEN, H, wallMat);  wallL.rotation.y =  Math.PI/2; wallL.position.set(-W/2, H/2, 0); scene.add(wallL);
+const wallR = plane(LEN, H, wallMat);  wallR.rotation.y = -Math.PI/2; wallR.position.set( W/2, H/2, 0); scene.add(wallR);
+const wallBack = plane(W, H, wallMat); wallBack.position.set(0, H/2,  LEN/2 - 1); wallBack.rotation.y = Math.PI; scene.add(wallBack);
+const wallEnd  = plane(W, H, wallMat); wallEnd.position.set(0, H/2, -LEN/2 + 1); scene.add(wallEnd);
+
+/* ---- paintings: load each Met texture, size it to its aspect, hang it ---- */
+const pickable = [];
+const manager = new THREE.LoadingManager();
+const loader   = new THREE.TextureLoader(manager);
+
+manager.onProgress = (url, loaded, total) => {
+  const pct = Math.round((loaded/total)*100);
+  document.getElementById('load-fill').style.width = pct + '%';
+  document.getElementById('load-pct').textContent = `Preparing the room… ${pct}%`;
+};
+manager.onLoad = () => document.getElementById('loader').classList.add('gone');
+
+PAINTINGS.forEach(p => {
+  loader.load(p.url, (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const img = tex.image, aspect = img.width / img.height;
+    const h = 2.0, w = h * aspect;                      // hang ~2m tall
+    const x = p.side === 'L' ? -W/2 + 0.06 : W/2 - 0.06;
+    const ry = p.side === 'L' ? Math.PI/2 : -Math.PI/2;
+
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(w + 0.18, h + 0.18, 0.07), frameMat);
+    frame.position.set(p.side === 'L' ? -W/2 + 0.03 : W/2 - 0.03, 1.85, p.z); frame.rotation.y = ry;
+    scene.add(frame);
+
+    // MeshBasic = the art is always crisply lit, never dimmed by room lighting
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map:tex }));
+    art.position.set(x, 1.85, p.z); art.rotation.y = ry;
+    art.userData = p; pickable.push(art); scene.add(art);
+
+    // a soft spotlight washing the wall around each work
+    const spot = new THREE.SpotLight(THEMES[theme].spot, THEMES[theme].spotI, 16, 0.7, 0.6, 0);
+    spot.position.set(p.side === 'L' ? -W/2 + 2.4 : W/2 - 2.4, H - 0.3, p.z);
+    spot.target = art; scene.add(spot); spots.push(spot);
+  });
+});
+
+/* ---- SCROLL-ON-RAILS: one progress value drives the camera down the corridor ---- */
+const START_Z = 18, END_Z = -22;
+let progress = 0, targetProgress = 0;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function addProgress(d){
+  targetProgress = Math.min(1, Math.max(0, targetProgress + d));
+  document.getElementById('hint').style.opacity = '0';
+}
+window.addEventListener('wheel', (e) => { e.preventDefault(); addProgress(e.deltaY * 0.00065); }, { passive:false });
+
+let touchY = null;
+window.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive:true });
+window.addEventListener('touchmove', (e) => {
+  if (touchY === null) return;
+  const dy = touchY - e.touches[0].clientY; touchY = e.touches[0].clientY;
+  addProgress(dy * 0.0016);
+}, { passive:true });
+
+// keyboard: a basic operable path for non-mouse users
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown' || e.key === 'PageDown') addProgress(0.06);
+  if (e.key === 'ArrowUp'   || e.key === 'PageUp')   addProgress(-0.06);
+  if (e.key === 'Escape')   hideLabel();
+});
+
+/* ---- click / tap a painting → wall label ---- */
+const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
+function showLabel(p){
+  document.getElementById('label-title').textContent = p.title;
+  document.getElementById('label-meta').textContent = `${p.artist} · ${p.year}`;
+  document.getElementById('label').classList.add('show');
+}
+function hideLabel(){ document.getElementById('label').classList.remove('show'); }
+document.getElementById('label-close').addEventListener('click', hideLabel);
+
+renderer.domElement.addEventListener('click', (e) => {
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hit = raycaster.intersectObjects(pickable)[0];
+  if (hit) showLabel(hit.object.userData);
+});
+
+/* ---- room-style toggle ---- */
+function applyTheme(name){
+  theme = name; const t = THEMES[name];
+  scene.background.setHex(t.bg); scene.fog.color.setHex(t.bg);
+  wallMat.color.setHex(t.wall); floorMat.color.setHex(t.floor); ceilMat.color.setHex(t.ceil);
+  hemi.intensity = t.hemi; amb.intensity = t.amb;
+  spots.forEach(s => { s.color.setHex(t.spot); s.intensity = t.spotI; });
+  document.getElementById('style-dark').setAttribute('aria-pressed', name === 'dark');
+  document.getElementById('style-white').setAttribute('aria-pressed', name === 'white');
+}
+document.getElementById('style-dark').addEventListener('click', () => applyTheme('dark'));
+document.getElementById('style-white').addEventListener('click', () => applyTheme('white'));
+
+/* ---- render loop ---- */
+function animate(){
+  requestAnimationFrame(animate);
+  // ease toward the target (or snap, if the visitor prefers reduced motion)
+  progress += (targetProgress - progress) * (reduceMotion ? 1 : 0.07);
+  const z = START_Z + (END_Z - START_Z) * progress;
+  camera.position.z = z;
+  camera.lookAt(0, 1.6, z - 8);
+  document.getElementById('prog').style.width = (progress * 100) + '%';
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// reduced-motion visitors get the gentlest possible experience; if you'd rather
+// send them straight to 2D, uncomment:
+// if (reduceMotion) document.getElementById('fallback').classList.add('show');
+</script>
+</body>
+</html>
