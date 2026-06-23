@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visit — AURUM Gallery</title>
+<meta name="description" content="Hours, admission, location, and tours. Plan your visit to AURUM — open Tuesday to Sunday, free every Thursday evening.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+
+<header>
+  <div class="wrap nav">
+    <a href="index.html" class="brand" aria-label="AURUM Gallery home">AURUM</a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav class="nav-links" id="primary-nav" aria-label="Primary">
+      <a href="exhibitions.html">Exhibitions</a>
+      <a href="artists.html">Artists</a>
+      <a href="visit.html" aria-current="page">Visit</a>
+      <a href="membership.html" class="btn">Become a Member</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="wrap page-hero">
+    <a href="index.html" class="crumb">← AURUM</a>
+    <h1>Plan a <em>visit.</em></h1>
+    <p class="lede">Open Tuesday through Sunday. Free every Thursday evening. Here is everything you need to walk in the door.</p>
+  </section>
+
+  <div class="wrap">
+    <div class="visit-grid">
+      <!-- left: logistics -->
+      <div class="info-list">
+        <div class="info-block">
+          <span class="mono">Hours</span>
+          <h2>When we're open</h2>
+          <div class="rows">
+            <div><span class="k">Tuesday – Friday</span><span class="v">10:00 – 18:00</span></div>
+            <div><span class="k">Thursday evening</span><span class="v free">until 21:00 · free</span></div>
+            <div><span class="k">Saturday – Sunday</span><span class="v">10:00 – 19:00</span></div>
+            <div><span class="k">Monday</span><span class="v">Closed</span></div>
+          </div>
+        </div>
+
+        <div class="info-block">
+          <span class="mono">Admission</span>
+          <h2>What it costs</h2>
+          <div class="rows">
+            <div><span class="k">General</span><span class="v">£12</span></div>
+            <div><span class="k">Students &amp; under-25</span><span class="v">£6</span></div>
+            <div><span class="k">Thursday evenings</span><span class="v free">Free</span></div>
+            <div><span class="k">Members</span><span class="v free">Always free</span></div>
+          </div>
+          <p style="margin-top:14px;">Children under twelve are always free. <a href="membership.html" class="link">Members</a> skip the line and bring a guest.</p>
+        </div>
+
+        <div class="info-block" id="getting-here">
+          <span class="mono">Getting here</span>
+          <h2>Finding the door</h2>
+          <p>AURUM sits at the end of a cobbled court in the Old Mint District. Enter under the gold lantern; the gallery is one flight down.</p>
+          <div class="rows">
+            <div><span class="k">Underground</span><span class="v">Mint Row · 4 min</span></div>
+            <div><span class="k">Bus</span><span class="v">12, 40, 88</span></div>
+            <div><span class="k">Bicycle</span><span class="v">Racks in the court</span></div>
+            <div><span class="k">Step-free access</span><span class="v free">Yes · lift to all floors</span></div>
+          </div>
+        </div>
+
+        <div class="info-block" id="tours">
+          <span class="mono">Tours</span>
+          <h2>Walk with a curator</h2>
+          <p>Forty minutes, one curator, a dozen visitors — a single thread through the collection. Tours run Thursday to Sunday at 11:00 and 15:00, included with admission. Groups by arrangement.</p>
+          <div class="visit-cta">
+            <a href="#book" class="btn">Reserve a tour</a>
+            <a href="membership.html" class="btn btn--ghost">Book a private viewing</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- right: location plate (stylised — fictional gallery) -->
+      <aside class="map-plate" aria-label="Location">
+        <div class="grid-art" role="img" aria-label="Stylised map of the Old Mint District with AURUM marked at the end of Lantern Court.">
+          <span class="pin">AURUM</span>
+        </div>
+        <div class="addr">
+          <div class="ttl">14 Lantern Court</div>
+          <div class="line">Old Mint District<br>Open Tue–Sun · Free Thursdays<br>hello@aurum.gallery</div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="closing" id="book">
+      <h2>We'll keep <em>a light on.</em></h2>
+      <p>Reserve a tour, request a private viewing, or simply walk in on Thursday — the doors are open to the city.</p>
+      <a href="#tours" class="btn">Reserve a tour</a>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="col">
+      <span class="brand-sm">AURUM</span>
+      <span>14 Lantern Court · Old Mint District</span>
+      <span>Open Tue–Sun, 10–18</span>
+    </div>
+    <div class="col">
+      <a href="exhibitions.html">Exhibitions</a>
+      <a href="artists.html">Artists &amp; Residencies</a>
+      <a href="visit.html">Plan a Visit</a>
+      <a href="membership.html">Membership</a>
+    </div>
+    <div class="col">
+      <a href="membership.html">Newsletter</a>
+      <a href="visit.html">Press</a>
+      <a href="visit.html">Contact</a>
+    </div>
+  </div>
+  <div class="wrap fineprint">
+    AURUM is a fictional gallery — sandbox demo only. The address, hours, and prices are illustrative.<br>
+    Layout re-skinned from the Hermes Agent landing page (Nous Research) as a design study.
+  </div>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>

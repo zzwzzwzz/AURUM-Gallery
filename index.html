@@ -4,232 +4,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AURUM Gallery — A Living Collection</title>
-<meta name="description" content="AURUM is a contemporary gallery and open collection. Rotating exhibitions, residencies, guided tours, and membership.">
-
+<meta name="description" content="AURUM is a contemporary gallery and open archive. Rotating exhibitions, residencies, guided tours, and membership — open to the city.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
-<style>
-  :root{
-    --bg:#0B0B0C;
-    --bg-raise:#121113;
-    --text:#EDEAE3;
-    --muted:#A39E92;
-    --gold:#C9A24B;
-    --gold-soft:rgba(201,162,75,.70);
-    --hair:rgba(201,162,75,.18);
-    --hair-faint:rgba(237,234,227,.08);
-    --serif:'Cormorant Garamond','Hoefler Text',Georgia,'Times New Roman',serif;
-    --mono:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;
-    --maxw:1200px;
-    --pad:clamp(20px,5vw,64px);
-  }
-
-  *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;}
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:var(--serif);
-    font-size:18px;
-    line-height:1.65;
-    -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
-  }
-
-  /* ---- grain + ambient gold spotlight (gold as light, not paint) ---- */
-  body::before{
-    content:"";
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
-    opacity:.05; mix-blend-mode:overlay;
-  }
-  .glow{
-    position:fixed; top:-10%; left:50%; transform:translateX(-50%);
-    width:90vw; height:70vh; z-index:0; pointer-events:none;
-    background:radial-gradient(closest-side,rgba(201,162,75,.10),rgba(201,162,75,0) 70%);
-  }
-
-  .wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding-inline:var(--pad);}
-
-  a{color:inherit;}
-  /* inline links carry an underline — never colour alone */
-  a.link{color:var(--gold); text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px; text-decoration-color:var(--gold-soft);}
-  a.link:hover{text-decoration-color:var(--gold);}
-
-  :focus-visible{outline:2px solid var(--gold); outline-offset:3px; border-radius:2px;}
-
-  .mono{font-family:var(--mono); letter-spacing:.18em; text-transform:uppercase; font-size:12px; color:var(--gold-soft);}
-
-  /* ---------- top bar ---------- */
-  header{position:sticky; top:0; z-index:20; backdrop-filter:blur(8px); background:rgba(11,11,12,.72); border-bottom:1px solid var(--hair-faint);}
-  .nav{display:flex; align-items:center; justify-content:space-between; height:68px;}
-  .brand{font-family:var(--serif); font-weight:600; font-size:24px; letter-spacing:.30em; padding-left:.30em;}
-  .brand::before{content:"—"; color:var(--gold); margin-right:.55em; letter-spacing:0;}
-  .nav-links{display:flex; align-items:center; gap:clamp(14px,2.4vw,34px);}
-  .nav-links a{font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color .2s;}
-  .nav-links a:hover{color:var(--text);}
-  .btn{
-    font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
-    background:var(--gold); color:#0B0B0C; /* dark text on gold = AA pass */
-    padding:11px 18px; border-radius:3px; text-decoration:none; font-weight:700;
-    transition:filter .2s; white-space:nowrap;
-  }
-  .btn:hover{filter:brightness(1.08);}
-  .nav-toggle{display:none;}
-
-  /* ---------- hero ---------- */
-  .hero{padding-top:clamp(56px,9vh,120px); padding-bottom:clamp(40px,6vh,72px);}
-  .hero .kick{margin-bottom:22px;}
-  .hero h1{
-    font-weight:500; letter-spacing:-.015em; line-height:.96;
-    font-size:clamp(56px,9vw,128px);
-    max-width:14ch;
-  }
-  .hero h1 em{font-style:italic; color:var(--gold);}
-  .hero p.lede{
-    margin-top:28px; max-width:46ch; color:var(--muted);
-    font-size:clamp(18px,2.1vw,23px); line-height:1.55;
-  }
-
-  /* ---------- "ways to visit" cards (mirror the 3 platform cards) ---------- */
-  .cards{display:flex; flex-wrap:wrap; gap:20px; margin-top:clamp(40px,6vh,68px);}
-  .card{
-    flex:1 1 260px; min-width:0;
-    border:1px solid var(--hair); border-radius:6px; overflow:hidden;
-    background:var(--bg-raise); display:flex; flex-direction:column;
-    transition:border-color .25s, transform .25s;
-  }
-  .card:hover{border-color:var(--gold-soft); transform:translateY(-3px);}
-  .card .thumb{aspect-ratio:4/3; overflow:hidden; position:relative; border-bottom:1px solid var(--hair-faint);}
-  .card .thumb img{width:100%; height:100%; object-fit:cover; filter:saturate(.92) brightness(.92);}
-  .card .body{padding:20px 22px 24px;}
-  .card .body .mono{display:block; margin-bottom:10px;}
-  .card .body h3{font-weight:600; font-size:27px; line-height:1.1; margin-bottom:6px;}
-  .card .body p{color:var(--muted); font-size:16px; line-height:1.5; margin-bottom:16px;}
-
-  /* ---------- "now showing" featured band (the one weighted block) ---------- */
-  .featured{margin-top:clamp(72px,11vh,128px); border-top:1px solid var(--hair); padding-top:clamp(40px,6vh,64px);}
-  .featured .head{display:flex; align-items:baseline; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:28px;}
-  .featured h2{font-weight:500; font-size:clamp(34px,5vw,60px); letter-spacing:-.01em; line-height:1;}
-  .featured .plate{
-    position:relative; border:1px solid var(--hair); border-radius:6px; overflow:hidden;
-    aspect-ratio:16/9; background:var(--bg-raise);
-  }
-  .featured .plate img{width:100%; height:100%; object-fit:cover; filter:saturate(.95);}
-  .featured .caption{
-    position:absolute; left:0; bottom:0; right:0; padding:22px 26px;
-    background:linear-gradient(0deg,rgba(11,11,12,.92),rgba(11,11,12,.45) 55%,transparent);
-  }
-  .featured .caption .ttl{font-size:clamp(22px,3vw,34px); font-weight:600; line-height:1.1;}
-  .featured .caption .meta{font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--gold-soft); margin-top:8px;}
-
-  /* ---------- six numbered blocks ---------- */
-  .features{margin-top:clamp(64px,9vh,112px);}
-  .feature{
-    display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,5vw,72px);
-    align-items:center;
-    padding:clamp(56px,8vh,104px) 0;
-    border-top:1px solid var(--hair-faint);
-  }
-  .feature:nth-child(even) .feature__media{order:2;}
-  .feature__media{position:relative;}
-  .frame{
-    border:1px solid var(--hair); border-radius:4px; padding:clamp(14px,2vw,26px);
-    background:var(--bg-raise);
-  }
-  .frame .art{
-    overflow:hidden; border-radius:2px; box-shadow:0 18px 50px rgba(0,0,0,.45);
-    aspect-ratio:4/5;
-  }
-  .feature:nth-child(3n+1) .frame .art{aspect-ratio:4/5;}
-  .feature:nth-child(3n+2) .frame .art{aspect-ratio:1/1;}
-  .feature:nth-child(3n+3) .frame .art{aspect-ratio:5/4;}
-  .frame .art img{width:100%; height:100%; object-fit:cover; filter:saturate(.94) brightness(.95);}
-  .frame .label{display:flex; justify-content:space-between; align-items:baseline; margin-top:14px; gap:12px;}
-  .frame .label .t{font-style:italic; font-size:17px; color:var(--text);}
-  .frame .label .a{font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--gold-soft); text-align:right; white-space:nowrap;}
-
-  .feature__copy .num{font-family:var(--mono); font-size:13px; letter-spacing:.05em; color:var(--gold); display:block; margin-bottom:18px;}
-  .feature__copy .num b{font-weight:700;}
-  .feature__copy .kicker{display:block; font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold-soft); margin-bottom:12px;}
-  .feature__copy h2{font-weight:500; font-size:clamp(34px,4.6vw,56px); letter-spacing:-.01em; line-height:1.02; margin-bottom:18px;}
-  .feature__copy p{color:var(--muted); font-size:clamp(17px,1.7vw,20px); line-height:1.6; max-width:44ch;}
-  .feature__copy .more{margin-top:22px; display:inline-block;}
-
-  /* ---------- closing / footer ---------- */
-  .closing{margin-top:clamp(72px,11vh,128px); border-top:1px solid var(--hair); padding:clamp(60px,9vh,110px) 0; text-align:center;}
-  .closing h2{font-weight:500; font-size:clamp(38px,6vw,82px); letter-spacing:-.01em; line-height:1; max-width:18ch; margin:0 auto 26px;}
-  .closing h2 em{font-style:italic; color:var(--gold);}
-  .closing p{color:var(--muted); max-width:42ch; margin:0 auto 32px;}
-
-  footer{border-top:1px solid var(--hair-faint); padding:48px 0 64px;}
-  .foot{display:flex; flex-wrap:wrap; justify-content:space-between; gap:28px; align-items:flex-start;}
-  .foot .brand-sm{font-family:var(--serif); font-weight:600; font-size:21px; letter-spacing:.28em;}
-  .foot .col{display:flex; flex-direction:column; gap:9px;}
-  .foot .col span, .foot .col a{font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--muted); text-decoration:none;}
-  .foot .col a:hover{color:var(--text);}
-  .fineprint{margin-top:40px; font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:#5d5a52; line-height:1.8;}
-  .fineprint a{color:#5d5a52; text-decoration:underline; text-underline-offset:2px;}
-
-  /* ---------- responsive ---------- */
-  @media (max-width:760px){
-    .nav-links{position:fixed; inset:68px 0 auto 0; flex-direction:column; align-items:flex-start; gap:0; background:var(--bg-raise); border-bottom:1px solid var(--hair); padding:8px var(--pad) 22px; transform:translateY(-130%); transition:transform .3s; box-shadow:0 20px 40px rgba(0,0,0,.5);}
-    .nav-links a{padding:13px 0; width:100%; border-bottom:1px solid var(--hair-faint);}
-    .nav-links .btn{margin-top:14px;}
-    #nav-check:checked ~ .nav-links{transform:translateY(0);}
-    .nav-toggle{display:block; font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); cursor:pointer;}
-    .feature{grid-template-columns:1fr; gap:34px; padding:48px 0;}
-    .feature:nth-child(even) .feature__media{order:0;}
-    .feature__media{order:0;}
-    .featured .plate{aspect-ratio:4/3;}
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="glow" aria-hidden="true"></div>
 
-<!-- ===================== NAV ===================== -->
 <header>
   <div class="wrap nav">
-    <a href="#top" class="brand" aria-label="AURUM Gallery home">AURUM</a>
-    <input type="checkbox" id="nav-check" hidden>
-    <label for="nav-check" class="nav-toggle" aria-hidden="true">Menu</label>
-    <nav class="nav-links" aria-label="Primary">
-      <a href="#exhibit">Exhibitions</a>
-      <a href="#discover">Artists</a>
-      <a href="#visit">Visit</a>
-      <a href="#belong" class="btn">Become a Member</a>
+    <a href="index.html" class="brand" aria-label="AURUM Gallery home">AURUM</a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav class="nav-links" id="primary-nav" aria-label="Primary">
+      <a href="exhibitions.html">Exhibitions</a>
+      <a href="artists.html">Artists</a>
+      <a href="visit.html">Visit</a>
+      <a href="membership.html" class="btn">Become a Member</a>
     </nav>
   </div>
 </header>
 
-<main id="top">
-  <!-- ===================== HERO ===================== -->
+<main>
+  <!-- HERO — rewritten: leads with the real claim, no morbid pun, ≤20-word lede -->
   <section class="wrap hero">
     <span class="mono kick">Est. MMXXVI · Open to the city</span>
-    <h1>A living collection, <em>hung in the dark.</em></h1>
-    <p class="lede">AURUM is a contemporary gallery and open archive — rotating exhibitions, working residencies, and quiet rooms where the work is the only light in the room.</p>
+    <h1>The work is the <em>only light.</em></h1>
+    <p class="lede">A contemporary gallery and open archive. Rotating exhibitions, working residencies, and four hundred works held in the open — free every Thursday.</p>
 
-    <!-- three ways to visit (re-cast of the 3 platform download cards) -->
-    <div class="cards" id="visit">
+    <div class="cards">
       <article class="card">
         <div class="thumb"><img src="https://images.metmuseum.org/CRDImages/ep/web-large/DP341200.jpg" alt="Gustave Caillebotte, Chrysanthemums in the Garden at Petit-Gennevilliers, 1893 — dense impressionist blooms in white and gold." loading="lazy"></div>
         <div class="body">
           <span class="mono">Tue–Sun · 10–18</span>
-          <h3>In Person</h3>
-          <p>Walk the floors on Tuesday through Sunday. Free admission every Thursday evening.</p>
-          <a href="#visit" class="link">Plan a visit</a>
+          <h3>Walk In</h3>
+          <p>The floors are open Tuesday through Sunday. Free admission every Thursday evening.</p>
+          <a href="visit.html" class="link">Plan a visit</a>
         </div>
       </article>
       <article class="card">
         <div class="thumb"><img src="https://images.metmuseum.org/CRDImages/as/web-large/DP141042.jpg" alt="Katsushika Hokusai, Under the Wave off Kanagawa (The Great Wave), circa 1830–32 — a cresting blue wave above Mount Fuji." loading="lazy"></div>
         <div class="body">
-          <span class="mono">Anywhere · 24/7</span>
-          <h3>Virtual Tour</h3>
-          <p>Step through every current room in high resolution, narrated by the curators.</p>
-          <a href="#exhibit" class="link">Enter the tour</a>
+          <span class="mono">40 min · Free</span>
+          <h3>Take a Tour</h3>
+          <p>One curator, a dozen visitors, a single thread through the collection.</p>
+          <a href="visit.html#tours" class="link">Reserve a tour</a>
         </div>
       </article>
       <article class="card">
@@ -238,14 +58,14 @@
           <span class="mono">By appointment</span>
           <h3>Private Viewing</h3>
           <p>Book the gallery after hours for a single work, a single guest, a single light.</p>
-          <a href="#belong" class="link">Request a room</a>
+          <a href="membership.html" class="link">A member's privilege</a>
         </div>
       </article>
     </div>
   </section>
 
-  <!-- ===================== NOW SHOWING (weighted feature) ===================== -->
-  <section class="wrap featured" id="exhibit">
+  <!-- NOW SHOWING -->
+  <section class="wrap featured">
     <div class="head">
       <span class="mono">Now Showing · Hall I</span>
       <h2>Fields of Restless Light</h2>
@@ -259,11 +79,9 @@
     </figure>
   </section>
 
-  <!-- ===================== SIX NUMBERED BLOCKS ===================== -->
+  <!-- SIX NUMBERED BLOCKS -->
   <div class="wrap features">
-
-    <!-- #1 -->
-    <section class="feature" id="collect">
+    <section class="feature">
       <div class="feature__media">
         <div class="frame">
           <div class="art"><img src="https://images.metmuseum.org/CRDImages/ep/web-large/DT47.jpg" alt="Paul Cézanne, Still Life with Apples and a Pot of Primroses, circa 1890 — apples and a flowering plant on a table." loading="lazy"></div>
@@ -271,16 +89,14 @@
         </div>
       </div>
       <div class="feature__copy">
-        <span class="num">№ <b>01</b></span>
-        <span class="kicker">Collect</span>
+        <span class="num">№ <b>01</b></span><span class="kicker">Collect</span>
         <h2>Living Collection</h2>
         <p>Over four hundred works held in the open — paintings, prints, and objects that travel between the walls and the public archive. Nothing here is locked away for long.</p>
-        <a href="#" class="link more">Browse the archive</a>
+        <a href="exhibitions.html" class="link more">Browse the archive</a>
       </div>
     </section>
 
-    <!-- #2 -->
-    <section class="feature" id="exhibitions">
+    <section class="feature">
       <div class="feature__media">
         <div class="frame">
           <div class="art"><img src="https://images.metmuseum.org/CRDImages/ep/web-large/DT1396.jpg" alt="Vincent van Gogh, L'Arlésienne: Madame Joseph-Michel Ginoux, 1888–89 — a seated woman in a dark dress against a yellow ground." loading="lazy"></div>
@@ -288,16 +104,14 @@
         </div>
       </div>
       <div class="feature__copy">
-        <span class="num">№ <b>02</b></span>
-        <span class="kicker">Exhibit</span>
+        <span class="num">№ <b>02</b></span><span class="kicker">Exhibit</span>
         <h2>Rotating Shows</h2>
         <p>The walls change with the season. Three to four exhibitions a year, each hung for one room and one argument — then taken down and let go.</p>
-        <a href="#" class="link more">See the season</a>
+        <a href="exhibitions.html" class="link more">See the season</a>
       </div>
     </section>
 
-    <!-- #3 -->
-    <section class="feature" id="discover">
+    <section class="feature">
       <div class="feature__media">
         <div class="frame">
           <div class="art"><img src="https://images.metmuseum.org/CRDImages/ep/web-large/DP231550.jpg" alt="Paul Cézanne, The Card Players, 1890–92 — two men seated at a table playing cards." loading="lazy"></div>
@@ -305,16 +119,14 @@
         </div>
       </div>
       <div class="feature__copy">
-        <span class="num">№ <b>03</b></span>
-        <span class="kicker">Discover</span>
+        <span class="num">№ <b>03</b></span><span class="kicker">Discover</span>
         <h2>Artist Residencies</h2>
         <p>Six artists in residence each year, working in the rooms above the gallery. Their studios open to visitors on the first Sunday of every month.</p>
-        <a href="#" class="link more">Meet the residents</a>
+        <a href="artists.html" class="link more">Meet the residents</a>
       </div>
     </section>
 
-    <!-- #4 -->
-    <section class="feature" id="experience">
+    <section class="feature">
       <div class="feature__media">
         <div class="frame">
           <div class="art"><img src="https://images.metmuseum.org/CRDImages/as/web-large/DP-13180-023.jpg" alt="Utagawa Hiroshige, from Six Jewel Rivers from Various Provinces, 1857 — a coloured woodblock landscape print." loading="lazy"></div>
@@ -322,16 +134,14 @@
         </div>
       </div>
       <div class="feature__copy">
-        <span class="num">№ <b>04</b></span>
-        <span class="kicker">Experience</span>
+        <span class="num">№ <b>04</b></span><span class="kicker">Experience</span>
         <h2>Guided Tours</h2>
         <p>Forty minutes, one curator, a dozen visitors. We walk a single thread through the collection and stop only where the work asks us to.</p>
-        <a href="#" class="link more">Reserve a tour</a>
+        <a href="visit.html#tours" class="link more">Reserve a tour</a>
       </div>
     </section>
 
-    <!-- #5 -->
-    <section class="feature" id="gather">
+    <section class="feature">
       <div class="feature__media">
         <div class="frame">
           <div class="art"><img src="https://images.metmuseum.org/CRDImages/ep/web-large/DP-25465-001.jpg" alt="Édouard Manet, The Monet Family in Their Garden at Argenteuil, 1874 — a family seated on the grass in a sunlit garden." loading="lazy"></div>
@@ -339,16 +149,14 @@
         </div>
       </div>
       <div class="feature__copy">
-        <span class="num">№ <b>05</b></span>
-        <span class="kicker">Gather</span>
+        <span class="num">№ <b>05</b></span><span class="kicker">Gather</span>
         <h2>Openings &amp; Events</h2>
         <p>Opening nights, late hours, and conversations with the artists. The garden stays open through summer for readings and quiet music.</p>
-        <a href="#" class="link more">What's on</a>
+        <a href="exhibitions.html" class="link more">What's on</a>
       </div>
     </section>
 
-    <!-- #6 -->
-    <section class="feature" id="belong">
+    <section class="feature">
       <div class="feature__media">
         <div class="frame">
           <div class="art"><img src="https://images.metmuseum.org/CRDImages/ep/web-large/DP-15762-001.jpg" alt="Michiel Sweerts, Clothing the Naked, circa 1661 — figures gathered in a dim interior, one offering cloth to another." loading="lazy"></div>
@@ -356,42 +164,38 @@
         </div>
       </div>
       <div class="feature__copy">
-        <span class="num">№ <b>06</b></span>
-        <span class="kicker">Belong</span>
+        <span class="num">№ <b>06</b></span><span class="kicker">Belong</span>
         <h2>Membership</h2>
         <p>Members keep the lights on and the doors open. Free entry, first invitations, and a key to the private viewing room — for the price of a few coffees a month.</p>
-        <a href="#" class="link more">Become a member</a>
+        <a href="membership.html" class="link more">Become a member</a>
       </div>
     </section>
-
   </div>
 
-  <!-- ===================== CLOSING ===================== -->
   <section class="wrap closing">
     <h2>Come in. <em>Stay until the light moves.</em></h2>
     <p>The collection is always open and always changing. Bring someone who hasn't been.</p>
-    <a href="#belong" class="btn">Become a Member</a>
+    <a href="membership.html" class="btn">Become a Member</a>
   </section>
 </main>
 
-<!-- ===================== FOOTER ===================== -->
 <footer>
   <div class="wrap foot">
     <div class="col">
       <span class="brand-sm">AURUM</span>
-      <span>14 Lantern Court</span>
+      <span>14 Lantern Court · Old Mint District</span>
       <span>Open Tue–Sun, 10–18</span>
     </div>
     <div class="col">
-      <a href="#exhibit">Exhibitions</a>
-      <a href="#discover">Artists &amp; Residencies</a>
-      <a href="#visit">Plan a Visit</a>
-      <a href="#belong">Membership</a>
+      <a href="exhibitions.html">Exhibitions</a>
+      <a href="artists.html">Artists &amp; Residencies</a>
+      <a href="visit.html">Plan a Visit</a>
+      <a href="membership.html">Membership</a>
     </div>
     <div class="col">
-      <a href="#">Newsletter</a>
-      <a href="#">Press</a>
-      <a href="#">Contact</a>
+      <a href="membership.html">Newsletter</a>
+      <a href="visit.html">Press</a>
+      <a href="visit.html">Contact</a>
     </div>
   </div>
   <div class="wrap fineprint">
@@ -399,5 +203,6 @@
     Artworks are in the public domain (CC0), courtesy of <a href="https://www.metmuseum.org/hubs/open-access">The Metropolitan Museum of Art Open Access</a>. AURUM is a fictional gallery — sandbox demo only.
   </div>
 </footer>
+<script src="script.js"></script>
 </body>
 </html>
